@@ -1,28 +1,30 @@
 ---
-- name: install jenkins on linux
-  hosts: jenkins-master
+- name: Install Jenkins on Linux
+  hosts: jenkins_master
   become: true
-  tasks: 
-    - name: install java 17
-      yum: 
+  tasks:
+    - name: Install Java 17
+      ansible.builtin.dnf:
         name: java-17-amazon-corretto
-        start: present
-    - name: jenkins repository
-      get_url: 
+        state: present
+
+    - name: Add Jenkins Repository
+      ansible.builtin.get_url:
         url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
-        dest: /etc/yum.repos.d/jenkins.repo 
-    - name: import key
-      command: rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
-    - name: install jenkins
-      yum: 
+        dest: /etc/yum.repos.d/jenkins.repo
+
+    - name: Import Jenkins GPG Key
+      ansible.builtin.rpm_key:
+        key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+        state: present
+
+    - name: Install Jenkins
+      ansible.builtin.dnf:
         name: jenkins
-        state: present      
-    - name: jenkins start
-      systemd: 
+        state: present
+
+    - name: Start and Enable Jenkins Service
+      ansible.builtin.systemd:
         name: jenkins
         enabled: yes
-        state: started 
-    - name: start jenkins after ec2 restarting 
-      service: 
-        name: jenkins
-        enabled: yes       
+        state: started

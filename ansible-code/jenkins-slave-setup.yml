@@ -1,69 +1,78 @@
 ---
-- name: jenkins slave setup using ansible
+- name: Jenkins Slave Setup using Ansible
   hosts: jenkins-slave
   become: true
   tasks:
-    - name: install java 17
+    - name: Install Java 17
       ansible.builtin.dnf:
         name: java-17-amazon-corretto
         state: present
+
     - name: Install Maven
-      ansible.builtin.get_url:
-        url: https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
-        dest: /opt
-    - name: extact maven pkg 
-      unarchive:
-        src: /opt/apache-maven-3.9.9-bin.tar.gz
+      ansible.builtin.unarchive:
+        src: https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
         dest: /opt
         remote_src: yes
-    - name: install git
-      yum:
+        extra_opts: [--strip-components=1]
+        creates: /opt/apache-maven-3.9.9/bin/mvn
+
+    - name: Install Git
+      ansible.builtin.dnf:
         name: git
-        state: present  
+        state: present
       tags: install_git
-    - name: check git version
-      shell: git --version 
-      tags: install_git
+
+    - name: Check Git version
+      ansible.builtin.command: git --version
       register: git_version
-    - name: print git version
-      debug: 
-        msg: "{{ git_version.stdout }}"
-      tags: install_git
-    - name: install docker
-      yum:
+      changed_when: false
+
+    - name: Print Git version
+      ansible.builtin.debug:
+        msg: "Git version: {{ git_version.stdout }}"
+
+    - name: Install Docker
+      ansible.builtin.dnf:
         name: docker
         state: present
-    - name: start and enable the docker service
-      service:
+
+    - name: Start and enable Docker service
+      ansible.builtin.service:
         name: docker
         state: started
-    - name: check docker version
-      shell: docker --version
+        enabled: yes
+
+    - name: Verify Docker version
+      ansible.builtin.command: docker --version
       register: docker_version
-    
-    - name: print docker version
-      debug:
-      msg: "{{ docker_version.stdout }}"
+      changed_when: false
       ignore_errors: yes
 
-    - name: Verify Docker service status explicitly
-      command: systemctl is-active docker
+    - name: Print Docker version
+      ansible.builtin.debug:
+        msg: "Docker version: {{ docker_version.stdout }}"
+
+    - name: Verify Docker service status
+      ansible.builtin.command: systemctl is-active docker
       register: docker_status
+      changed_when: false
 
     - name: Display Docker service status
-      debug:
+      ansible.builtin.debug:
         msg: "Docker service is {{ docker_status.stdout }}"
-    - name: give 777 permissions on /var/run/docker.sock
-      file: 
-        path: /var/run/docker.sock
-        state: file 
-        mode: 0777
 
-    - name: start docker on boot time 
-      service: 
-        name: docker 
-        enabled: yes 
+    - name: Add Jenkins user to Docker group
+      ansible.builtin.user:
+        name: jenkins
+        groups: docker
+        append: yes
 
+    - name: Restart Jenkins to apply Docker group changes
+      ansible.builtin.service:
+        name: jenkins
+        state: restarted
 
-
-
+    - name: Reboot system to apply group changes
+      ansible.builtin.reboot:
+        msg: "Rebooting to apply Jenkins Docker group permissions"
+        reboot_timeout: 600

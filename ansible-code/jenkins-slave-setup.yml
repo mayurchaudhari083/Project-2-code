@@ -104,13 +104,13 @@
    
     - name: Display AWS CLI version
       debug:
-      msg: "Installed AWS CLI version: {{ aws_version.stdout }}"
+        msg: "Installed AWS CLI version: {{ aws_version.stdout }}"
 
     - name: Download Helm installation script
       get_url:
-      url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-      dest: /tmp/get-helm-3
-      mode: '0755'
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get-helm-3
+        mode: '0755'
       tags: install_helm
 
     - name: Install Helm
@@ -125,5 +125,5 @@
 
     - name: Display Helm version
       debug:
-      msg: "Helm installed: {{ helm_version.stdout }}"
+        msg: "Helm installed: {{ helm_version.stdout }}"
       tags: install_helm

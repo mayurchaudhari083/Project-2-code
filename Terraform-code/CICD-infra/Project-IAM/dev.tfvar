@@ -1,0 +1,11 @@
+# Common Varibales
+env      = "dev"
+co_name  = "fqts"
+vpc_id   = "vpc-09f6fc08d2689b3f0"
+
+# IAM related varibales.
+
+master_role_name = "eks-master-role"
+worker_role_name = "eks-worker-role"
+policy_name = "eks-autoscale-policy"
+instance_profile_name = "eks-instance-profile"
